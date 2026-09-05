@@ -26,7 +26,6 @@ public class WalletMutationService {
 
     @Transactional
     public TransactionResponse apply(TransactionRequest request) {
-        // Lock the wallet row for the entire read-check-update operation.
         Wallet wallet = walletRepository.findWithLockById(request.userId())
                 .orElseThrow(() -> new WalletNotFoundException("Wallet not found: " + request.userId()));
 
