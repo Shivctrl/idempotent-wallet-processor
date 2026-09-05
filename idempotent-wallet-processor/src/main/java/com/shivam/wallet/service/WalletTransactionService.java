@@ -30,17 +30,15 @@ public class WalletTransactionService {
 
     public TransactionResponse process(TransactionRequest request) {
         try {
-            // First request wins the unique transaction_id reservation.
+            
             reservationService.reserve(request);
         } catch (DuplicateTransactionException duplicate) {
             return handleDuplicate(request.transactionId(), duplicate);
         }
 
         try {
-            // Wallet balance mutation and SUCCESS status are one atomic transaction.
             return walletMutationService.apply(request);
         } catch (InsufficientFundsException | WalletNotFoundException ex) {
-            // Reservation committed independently, so terminal failures must also be persisted independently.
             transactionStatusService.markFailed(request.transactionId());
             throw ex;
         } catch (RuntimeException ex) {
@@ -58,7 +56,6 @@ public class WalletTransactionService {
             return toResponse(existing, true);
         }
 
-        // PROCESSING or FAILED is not a successful replay. The assignment explicitly allows 409.
         throw duplicate;
     }
 
